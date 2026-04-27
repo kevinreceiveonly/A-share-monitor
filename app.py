@@ -12,6 +12,7 @@ st.markdown("""
 - 比价 = 沪深300指数收盘价 ÷ 创业板指数收盘价  
 - 比值 **上升** → 沪深300相对走强  
 - 比值 **下降** → 创业板相对走强  
+- 数据起始于 **2010年6月1日**（创业板指数发布日）  
 """)
 
 # ----------------------------- 数据获取函数 -----------------------------
@@ -39,7 +40,7 @@ def fetch_index_data(symbol: str, name: str, start_date: str, end_date: str) -> 
 
         # 格式化日期
         df["date"] = pd.to_datetime(df["date"])
-        # 筛选近3年区间
+        # 筛选指定区间
         mask = (df["date"] >= start_date) & (df["date"] <= end_date)
         df = df.loc[mask].copy()
 
@@ -55,9 +56,9 @@ def fetch_index_data(symbol: str, name: str, start_date: str, end_date: str) -> 
         return pd.DataFrame()
 
 # ----------------------------- 主逻辑 -----------------------------
-# 日期范围：最近3年
+# 日期范围：创业板指数发布日 2010-06-01 至今日
+start_dt = datetime(2010, 6, 1)
 end_dt = datetime.now()
-start_dt = end_dt - timedelta(days=3 * 365)  # 粗略3年
 
 end_date_str = end_dt.strftime("%Y%m%d")
 start_date_str = start_dt.strftime("%Y%m%d")
@@ -72,7 +73,7 @@ if not df_hs300.empty and not df_cyb.empty:
     merged = pd.merge(df_hs300, df_cyb, on="date", how="inner")
 
     if merged.empty:
-        st.warning("两个指数在近3年内没有共同的交易日，无法计算比价。")
+        st.warning("两个指数在指定周期内没有共同的交易日，无法计算比价。")
     else:
         # 按日期升序排列
         merged = merged.sort_values("date").reset_index(drop=True)
@@ -93,7 +94,7 @@ if not df_hs300.empty and not df_cyb.empty:
             )
         )
         fig.update_layout(
-            title="沪深300指数 / 创业板指数 比价走势（近3年）",
+            title="沪深300指数 / 创业板指数 比价走势（自2010年6月1日至今）",
             xaxis_title="日期",
             yaxis_title="比值",
             hovermode="x unified",
